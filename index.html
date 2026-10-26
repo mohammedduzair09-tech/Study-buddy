@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hinglish Study Buddy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f6f7fb;--ink:#14213d;--mute:#5b6784;--card:#fff;--line:#d9deea;--hi:#ffd23f;--ok:#1b9e5a;--bad:#d64045}
+@media(prefers-color-scheme:dark){:root{--bg:#0e1530;--ink:#eef1fb;--mute:#9aa6c7;--card:#18214a;--line:#2b376b;--hi:#ffd23f}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "Bricolage Grotesque",system-ui,sans-serif}
+main{max-width:760px;margin:0 auto;padding:28px 18px 60px}
+h1{font-size:clamp(2rem,6vw,3rem);line-height:1.05;margin:0 0 8px;font-weight:800}
+h1 mark{background:linear-gradient(transparent 55%,var(--hi) 55%);color:inherit;padding:0 4px}
+.sub{color:var(--mute);margin:0 0 22px}
+textarea,input,select{width:100%;font:inherit;color:var(--ink);background:var(--card);border:1.5px solid var(--line);border-radius:10px;padding:12px}
+textarea{min-height:170px;resize:vertical}
+:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
+.row>*{flex:1 1 180px}
+button{font:inherit;font-weight:600;cursor:pointer;border-radius:10px;border:1.5px solid var(--ink);background:var(--card);color:var(--ink);padding:11px 18px}
+button.main{background:var(--hi);color:#14213d;border-color:#14213d}
+button:disabled{opacity:.5;cursor:wait}
+details{background:var(--card);border:1.5px solid var(--line);border-radius:10px;padding:10px 14px;margin-bottom:16px}
+summary{cursor:pointer;font-weight:600}
+details p{color:var(--mute);font-size:.92rem;margin:8px 0}
+.tabs{display:flex;gap:6px;margin:26px 0 14px;border-bottom:2px solid var(--line);flex-wrap:wrap}
+.tabs button{border:0;border-radius:10px 10px 0 0;background:none;padding:9px 14px}
+.tabs button[aria-selected=true]{background:var(--hi);color:#14213d}
+.panel{background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:18px}
+.panel h3{margin:0 0 8px}
+.panel p,.panel li{max-width:68ch;white-space:pre-wrap}
+.card{min-height:150px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:1.2rem;font-weight:600;padding:20px;border:2px dashed var(--ink);border-radius:14px;cursor:pointer;margin:12px 0}
+.card.back{background:var(--hi);color:#14213d;border-style:solid}
+.opt{display:block;width:100%;text-align:left;margin:6px 0;font-weight:400}
+.opt.ok{background:var(--ok);color:#fff;border-color:var(--ok)}
+.opt.bad{background:var(--bad);color:#fff;border-color:var(--bad)}
+.why{color:var(--mute);font-size:.92rem;margin:4px 0 14px}
+.err{color:var(--bad);font-weight:600;margin-top:10px}
+.hide{display:none}
+footer{color:var(--mute);font-size:.85rem;margin-top:30px}
+</style>
+</head>
+<body>
+<main>
+<h1>Hinglish <mark>Study Buddy</mark></h1>
+<p class="sub">Apne notes ya chapter paste karo. Simple Hinglish mein explanation, flashcards aur quiz mil jayega.</p>
+
+<section id="auth" class="panel">
+<h3>Pehle login karo</h3>
+<button class="main" id="gBtn">Google se login</button>
+<p class="why">Ya email se:</p>
+<input id="em" type="email" placeholder="Email" autocomplete="email" aria-label="Email">
+<input id="pw" type="password" placeholder="Password (kam se kam 6 characters)" autocomplete="current-password" aria-label="Password" style="margin-top:8px">
+<div class="row"><button id="inBtn">Login</button><button id="upBtn">Naya account banao</button></div>
+<p class="err" id="aErr" role="alert"></p>
+</section>
+
+<div id="app" class="hide">
+<div class="row" style="align-items:center;margin-top:0"><span id="who" class="why"></span><button id="outBtn" style="flex:0 0 auto">Logout</button></div>
+<label for="notes" style="font-weight:600">Notes paste karo</label>
+<textarea id="notes" placeholder="Yahan chapter ya notes paste karo..."></textarea>
+<div class="row" style="align-items:center"><label for="file" style="font-weight:600;flex:0 0 auto">Ya file upload karo:</label><input id="file" type="file" accept=".pdf,.txt,.md,image/*"></div>
+<p class="why" id="fst" role="status">PDF, TXT, MD ya notes ki photo chalegi.</p>
+<div class="row">
+<select id="level" aria-label="Level">
+<option>Class 6-8</option><option selected>Class 9-10</option><option>Class 11-12</option><option>College</option>
+</select>
+<select id="lang" aria-label="Style">
+<option value="Hinglish (Hindi written in English letters)">Hinglish</option>
+<option value="simple English">Simple English</option>
+</select>
+</div>
+<button class="main" id="go">Samjhao</button>
+<div id="err" class="err" role="alert"></div>
+
+<div id="out" class="hide">
+<div class="tabs" role="tablist">
+<button role="tab" aria-selected="true" data-t="explain">Explanation</button>
+<button role="tab" aria-selected="false" data-t="cards">Flashcards</button>
+<button role="tab" aria-selected="false" data-t="quiz">Quiz</button>
+<button role="tab" aria-selected="false" data-t="audio">Audio</button>
+<button role="tab" aria-selected="false" data-t="reel">Reel script</button>
+</div>
+<div class="panel" id="explain"></div>
+<div class="panel hide" id="cards"></div>
+<div class="panel hide" id="quiz"></div>
+<div class="panel hide" id="audio"></div>
+<div class="panel hide" id="reel"></div>
+</div>
+</div>
+<footer>AI galti kar sakta hai. Important cheezein apni book se zaroor check karo.</footer>
+</main>
+
+<script>
+const $=id=>document.getElementById(id);
+const store={get:k=>{try{return localStorage.getItem(k)||""}catch(e){return ""}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
+let data=null,ci=0,flipped=false,score=0,answered=0;
+
+// Paste your Cloudflare Worker URL here (the Worker holds the Gemini key, not this page)
+const API_URL="PASTE_YOUR_WORKER_URL_HERE";
+
+function esc(s){const d=document.createElement("div");d.textContent=s==null?"":String(s);return d.innerHTML}
+
+async function ask(prompt,json,img){
+  if(API_URL.startsWith("PASTE"))throw new Error("Server URL abhi set nahi hai. Developer ko batao.");
+  const tk=window.getToken?await window.getToken():"";
+  if(!tk)throw new Error("Pehle login karo.");
+  const r=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+tk},body:JSON.stringify({prompt,json,image:img})});
+  const j=await r.json();
+  if(!r.ok)throw new Error((j.error&&j.error.message)||"API error "+r.status);
+  const t=j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts.map(p=>p.text||"").join("");
+  if(!t)throw new Error("Khaali jawab aaya. Dobara try karo.");
+  return t;
+}
+
+$("go").onclick=async()=>{
+  const notes=$("notes").value.trim();
+  $("err").textContent="";
+  if(notes.length<40){$("err").textContent="Thode aur notes paste karo (kam se kam 2-3 lines).";return}
+  $("go").disabled=true;$("go").textContent="Soch raha hoon...";
+  const prompt=`You are a friendly teacher. Student level: ${$("level").value}. Write in ${$("lang").value}, casual and easy, keep technical terms in English.
+Use ONLY the notes below. Do not invent facts.
+Return JSON exactly: {"title":string,"explanation":string (short paragraphs, use simple everyday examples),"key_points":[string x5-7],"flashcards":[{"q":string,"a":string} x8],"quiz":[{"q":string,"options":[4 strings],"answer":0-3 index,"why":string} x6]}
+NOTES:
+${notes.slice(0,12000)}`;
+  try{
+    const t=await ask(prompt,true);
+    data=JSON.parse(t.replace(/```json|```/g,"").trim());
+    render();
+  }catch(e){$("err").textContent=e.message||"Kuch galat ho gaya."}
+  $("go").disabled=false;$("go").textContent="Samjhao";
+};
+
+function render(){
+  $("out").classList.remove("hide");
+  $("explain").innerHTML=`<h3>${esc(data.title)}</h3><p>${esc(data.explanation)}</p><h3>Yaad rakhne wali baatein</h3><ul>${(data.key_points||[]).map(p=>`<li>${esc(p)}</li>`).join("")}</ul>`;
+  ci=0;flipped=false;drawCard();
+  score=0;answered=0;drawQuiz();
+  $("reel").innerHTML=`<p>Is topic ko 30-45 second ki Reel script bana do.</p><button class="main" id="mkReel">Reel script banao</button><div id="reelOut"></div>`;
+  $("mkReel").onclick=makeReel;
+  if(synth)synth.cancel();
+  drawAudio();
+  show("explain");
+}
+
+function show(t){
+  document.querySelectorAll(".tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.t===t));
+  ["explain","cards","quiz","audio","reel"].forEach(id=>$(id).classList.toggle("hide",id!==t));
+}
+document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>show(b.dataset.t));
+
+function drawCard(){
+  const f=data.flashcards||[];if(!f.length){$("cards").innerHTML="<p>Flashcards nahi mile.</p>";return}
+  const c=f[ci];
+  $("cards").innerHTML=`<p>Card ${ci+1} / ${f.length}. Palatne ke liye card par tap karo.</p>
+  <div class="card ${flipped?"back":""}" id="fc" tabindex="0" role="button" aria-label="Flip card">${esc(flipped?c.a:c.q)}</div>
+  <div class="row"><button id="prev">Pichla</button><button id="say">Suno</button><button id="next" class="main">Agla</button></div>`;
+  const flip=()=>{flipped=!flipped;drawCard();$("fc").focus()};
+  $("fc").onclick=flip;
+  $("fc").onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();flip()}};
+  $("prev").onclick=()=>{ci=(ci-1+f.length)%f.length;flipped=false;drawCard()};
+  $("next").onclick=()=>{ci=(ci+1)%f.length;flipped=false;drawCard()};
+  $("say").onclick=()=>{if(!speak(flipped?c.a:c.q))$("err").textContent="Is browser mein audio support nahi hai."};
+}
+
+function drawQuiz(){
+  const q=data.quiz||[];
+  $("quiz").innerHTML=`<p id="sc">Score: 0 / ${q.length}</p>`+q.map((x,i)=>`<div data-i="${i}"><h3>${i+1}. ${esc(x.q)}</h3>${(x.options||[]).map((o,j)=>`<button class="opt" data-j="${j}">${esc(o)}</button>`).join("")}<p class="why hide"></p></div>`).join("");
+  $("quiz").querySelectorAll("[data-i]").forEach(box=>{
+    const x=q[box.dataset.i];
+    box.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{
+      if(box.dataset.done)return;box.dataset.done=1;answered++;
+      const j=+b.dataset.j;
+      if(j===x.answer){score++;b.classList.add("ok")}else{b.classList.add("bad");box.querySelectorAll(".opt")[x.answer].classList.add("ok")}
+      const w=box.querySelector(".why");w.textContent=x.why||"";w.classList.remove("hide");
+      $("sc").textContent=`Score: ${score} / ${q.length}`+(answered===q.length?(score>=q.length*0.8?" Zabardast!":" Ek baar explanation phir padho."):"");
+    });
+  });
+}
+
+const PDFJS="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/";
+function loadPdfJs(){
+  return new Promise((ok,no)=>{
+    if(window.pdfjsLib)return ok();
+    const s=document.createElement("script");
+    s.src=PDFJS+"pdf.min.js";
+    s.onload=()=>{pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS+"pdf.worker.min.js";ok()};
+    s.onerror=()=>no(new Error("PDF reader load nahi hua. Internet check karo."));
+    document.head.appendChild(s);
+  });
+}
+async function readPdf(file){
+  await loadPdfJs();
+  const pdf=await pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise;
+  let t="";
+  for(let i=1;i<=Math.min(pdf.numPages,30)&&t.length<14000;i++){
+    const c=await (await pdf.getPage(i)).getTextContent();
+    t+=c.items.map(x=>x.str).join(" ")+"\n";
+  }
+  return t;
+}
+const toB64=f=>new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result.split(",")[1]);r.onerror=()=>no(new Error("File padh nahi paya."));r.readAsDataURL(f)});
+
+$("file").onchange=async e=>{
+  const f=e.target.files[0];if(!f)return;
+  $("err").textContent="";$("fst").textContent="File padh raha hoon...";
+  try{
+    const n=f.name.toLowerCase();let t="";
+    if(f.size>10*1024*1024)throw new Error("File 10 MB se chhoti honi chahiye.");
+    if(f.type==="application/pdf"||n.endsWith(".pdf")){
+      t=await readPdf(f);
+      if(t.trim().length<40)throw new Error("Is PDF mein text nahi mila (shayad scan hai). Uske pages ki photo upload karke dekho.");
+    }else if(f.type.startsWith("image/")){
+      if(f.size>4*1024*1024)throw new Error("Photo 4 MB se chhoti rakho.");
+      t=await ask("Extract all the text from this image of study notes. Return only the text, nothing else.",false,{mime:f.type,data:await toB64(f)});
+    }else if(f.type.startsWith("text/")||/\.(txt|md)$/.test(n)){
+      t=await f.text();
+    }else throw new Error("Sirf PDF, TXT, MD ya photo upload karo.");
+    t=t.trim();
+    if(t.length<40)throw new Error("Is file mein padhne layak text nahi mila.");
+    $("notes").value=t.slice(0,12000);
+    $("fst").textContent=f.name+" se text aa gaya"+(t.length>12000?" (pehle 12000 characters liye gaye)":"")+". Ab Samjhao dabao.";
+  }catch(er){$("fst").textContent="PDF, TXT, MD ya notes ki photo chalegi.";$("err").textContent=er.message||"File nahi padh paya."}
+  e.target.value="";
+};
+
+const synth=window.speechSynthesis;
+let voices=[];
+const setSt=t=>{const e=$("aSt");if(e)e.textContent=t};
+function loadVoices(){
+  voices=synth?synth.getVoices():[];
+  const s=$("aVoice");if(!s)return;
+  const keep=s.value;
+  s.innerHTML=voices.map((v,i)=>`<option value="${i}">${esc(v.name)} (${esc(v.lang)})</option>`).join("");
+  let p=voices.findIndex(v=>v.lang==="en-IN");if(p<0)p=voices.findIndex(v=>v.lang==="hi-IN");
+  if(keep!=="")s.value=keep;else if(p>=0)s.value=p;
+}
+if(synth)synth.onvoiceschanged=loadVoices;
+
+function speak(text){
+  if(!synth)return false;
+  synth.cancel();
+  const parts=text.replace(/\s+/g," ").match(/[^.!?\u0964]+[.!?\u0964]?/g)||[text];
+  const chunks=[];let cur="";
+  parts.forEach(p=>{if((cur+p).length>180){if(cur)chunks.push(cur);cur=p}else cur+=p});
+  if(cur)chunks.push(cur);
+  const sel=$("aVoice"),v=sel&&sel.value!==""?voices[+sel.value]:null;
+  const rate=$("aRate")?+$("aRate").value:1;
+  chunks.forEach((c,i)=>{
+    const u=new SpeechSynthesisUtterance(c.trim());
+    if(v){u.voice=v;u.lang=v.lang}else u.lang="en-IN";
+    u.rate=rate;
+    if(i===chunks.length-1)u.onend=()=>setSt("Ho gaya.");
+    synth.speak(u);
+  });
+  return true;
+}
+
+function audioText(what){
+  const d=data,L=["A","B","C","D"];
+  const exp=d.title+". "+d.explanation;
+  const kp="Yaad rakhne wali baatein. "+(d.key_points||[]).join(". ")+".";
+  const fc=(d.flashcards||[]).map((c,i)=>`Sawal ${i+1}. ${c.q} Jawab. ${c.a}`).join(" ");
+  const qz=(d.quiz||[]).map((x,i)=>`Sawal ${i+1}. ${x.q} `+(x.options||[]).map((o,j)=>`Option ${L[j]}. ${o}.`).join(" ")).join(" ")
+    +" Ab jawab sunao. "+(d.quiz||[]).map((x,i)=>`Sawal ${i+1}. Option ${L[x.answer]}. ${x.why||""}`).join(" ");
+  return {all:exp+" "+kp,exp,kp,fc,qz}[what];
+}
+
+function drawAudio(){
+  if(!synth){$("audio").innerHTML="<p>Is browser mein audio support nahi hai. Chrome ya Edge try karo.</p>";return}
+  $("audio").innerHTML=`<p>Padhne ka mann nahi? Suno. Chalte-phirte bhi revise ho jayega.</p>
+  <div class="row">
+  <select id="aWhat" aria-label="Kya sunna hai"><option value="all">Explanation + key points</option><option value="exp">Sirf explanation</option><option value="kp">Sirf key points</option><option value="fc">Flashcards (sawal, phir jawab)</option><option value="qz">Quiz sawal, phir jawab</option></select>
+  <select id="aVoice" aria-label="Awaaz"></select>
+  <select id="aRate" aria-label="Speed"><option value="0.8">Dheere</option><option value="1" selected>Normal</option><option value="1.25">Tez</option></select>
+  </div>
+  <div class="row"><button class="main" id="aPlay">Play</button><button id="aPause">Pause</button><button id="aStop">Stop</button></div>
+  <p class="why" id="aSt"></p>
+  <p class="why">Tip: Hinglish ke liye "en-IN" ya "hi-IN" awaaz chuno. Awaazein tumhare device par depend karti hain.</p>`;
+  loadVoices();
+  $("aPlay").onclick=()=>{speak(audioText($("aWhat").value));setSt("Chal raha hai...")};
+  $("aPause").onclick=()=>{if(synth.speaking&&!synth.paused){synth.pause();setSt("Ruka hua.");$("aPause").textContent="Resume"}else{synth.resume();setSt("Chal raha hai...");$("aPause").textContent="Pause"}};
+  $("aStop").onclick=()=>{synth.cancel();setSt("Band.");$("aPause").textContent="Pause"};
+}
+
+async function makeReel(){
+  $("mkReel").disabled=true;$("reelOut").innerHTML="<p>Likh raha hoon...</p>";
+  try{
+    const t=await ask(`Write a 30-45 second Instagram Reel script in Hinglish (Hindi in English letters) that teaches this topic to students aged 15-25. Format: Hook (first 3 sec), then 4-5 short lines, then a closing line with a call to action, then 5 hashtags. Topic and notes:\n${data.title}\n${data.explanation}`,false);
+    $("reelOut").innerHTML=`<p>${esc(t)}</p><button id="cp">Copy</button>`;
+    $("cp").onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(t);$("cp").textContent="Copied"};
+  }catch(e){$("reelOut").innerHTML=`<p class="err">${esc(e.message)}</p>`}
+  $("mkReel").disabled=false;
+}
+</script>
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {getAuth,onAuthStateChanged,signInWithPopup,GoogleAuthProvider,signInWithEmailAndPassword,createUserWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+// Paste the values from Firebase Console > Project settings > Your apps > Web app
+const cfg={apiKey:"PASTE_API_KEY",authDomain:"PASTE_AUTH_DOMAIN",projectId:"PASTE_PROJECT_ID",appId:"PASTE_APP_ID"};
+
+const g=id=>document.getElementById(id);
+const showErr=m=>{g("aErr").textContent=m||""};
+const MSG={
+  "auth/invalid-credential":"Email ya password galat hai.",
+  "auth/invalid-email":"Email sahi format mein likho.",
+  "auth/email-already-in-use":"Ye email pehle se registered hai. Login karo.",
+  "auth/weak-password":"Password kam se kam 6 characters ka rakho.",
+  "auth/too-many-requests":"Bahut zyada try ho gaye. Thodi der baad dobara karo.",
+  "auth/network-request-failed":"Internet check karo."
+};
+const fail=e=>showErr(e.code==="auth/popup-closed-by-user"?"":(MSG[e.code]||"Login nahi ho paya. Dobara try karo."));
+
+if(cfg.apiKey.startsWith("PASTE")){
+  showErr("Firebase config abhi set nahi hai. Developer ko batao.");
+}else{
+  const auth=getAuth(initializeApp(cfg));
+  onAuthStateChanged(auth,u=>{
+    g("auth").classList.toggle("hide",!!u);
+    g("app").classList.toggle("hide",!u);
+    g("who").textContent=u?("Login: "+(u.displayName||u.email)):"";
+    window.getToken=u?()=>u.getIdToken():null;
+    if(u)showErr("");
+  });
+  g("gBtn").onclick=()=>signInWithPopup(auth,new GoogleAuthProvider()).catch(fail);
+  g("inBtn").onclick=()=>signInWithEmailAndPassword(auth,g("em").value.trim(),g("pw").value).catch(fail);
+  g("upBtn").onclick=()=>createUserWithEmailAndPassword(auth,g("em").value.trim(),g("pw").value).catch(fail);
+  g("outBtn").onclick=()=>signOut(auth);
+}
+</script>
+</body>
+</html>
